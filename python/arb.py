@@ -107,7 +107,7 @@ class Arbitrage():
                 f"[deleverage close] best amount:{best_amount} max profit:{max_profit}")
             try:
                 profit = self.arb.deleverage_close(
-                    best_amount.value, self.account.address)
+                    best_amount.value, self.max_leverage.value, self.account.address)
                 self.my_print(
                     f"[deleverage close] [action] close {best_amount} and profit {profit}")
                 self.print_account_info()
