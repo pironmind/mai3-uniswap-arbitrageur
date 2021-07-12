@@ -243,9 +243,9 @@ contract UniswapV3Arbitrage is SwapSingle {
             sqrtPriceLimitX96: 0
         });
         exactInputSingle(params);
-        int256 mcdexAmount = SafeCast
-        .toInt256(amount * 10**(18 - underlyingAssetDecimals))
-        .neg();
+        int256 mcdexAmount = SafeCast.toInt256(
+            amount * 10**(18 - underlyingAssetDecimals)
+        );
         int256 collateralBalance = SafeCast.toInt256(
             IERC20Metadata(collateral).balanceOf(msg.sender) *
                 10**(18 - collateralDecimals)
