@@ -47,12 +47,6 @@ interface ILiquidityPool {
         uint32 flags
     ) external returns (int256);
 
-    function setTargetLeverage(
-        uint256 perpetualIndex,
-        address trader,
-        int256 targetLeverage
-    ) external;
-
     function deposit(
         uint256 perpetualIndex,
         address trader,

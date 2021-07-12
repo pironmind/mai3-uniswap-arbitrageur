@@ -10,7 +10,7 @@ from lib.wad import Wad
 from mai3_contract import Arbitrage
 
 
-class Arbitrage():
+class MyArbitrage():
 
     big_number = Wad.from_number(9999999)
 
@@ -46,7 +46,7 @@ class Arbitrage():
             f"[profit open] best amount:{best_amount}, max profit:{max_profit}")
         if max_profit >= self.profit_limit:
             try:
-                profit = self.arb.profit_open(
+                profit = self.arb.execute_profit_open(
                     best_amount.value, self.profit_limit.value, self.account.address)
                 self.my_print(
                     f"[profit open] [action] open {best_amount} and profit {profit}")
@@ -76,7 +76,7 @@ class Arbitrage():
             f"[profit close] best amount:{best_amount}, max profit:{max_profit}")
         if max_profit >= self.profit_limit:
             try:
-                profit = self.arb.profit_close(
+                profit = self.arb.execute_profit_close(
                     best_amount.value, self.profit_limit.value, self.account.address)
                 self.my_print(
                     f"[profit close] [action] close {best_amount} and profit {profit}")
@@ -106,7 +106,7 @@ class Arbitrage():
             self.my_print(
                 f"[deleverage close] best amount:{best_amount} max profit:{max_profit}")
             try:
-                profit = self.arb.deleverage_close(
+                profit = self.arb.execute_deleverage_close(
                     best_amount.value, self.max_leverage.value, self.account.address)
                 self.my_print(
                     f"[deleverage close] [action] close {best_amount} and profit {profit}")
@@ -130,7 +130,7 @@ class Arbitrage():
     def all_close_check(self, funding_rate, position):
         if funding_rate <= self.min_funding_rate:
             try:
-                profit = self.arb.all_close(
+                profit = self.arb.execute_all_close(
                     self.min_funding_rate.value, self.account.address)
                 self.my_print(
                     f"[all close] [action] close {Wad(0) - position} and profit {profit}")
@@ -164,9 +164,9 @@ class Arbitrage():
 
 
 if __name__ == "__main__":
-    arb_address = ""
+    arb_address = "0x4618dF3679B7cE1ba4Fc4Fa8Da1F17B7c46D7d02"
     wallet_key = "dc1dfb1ba0850f1e808eb53e4c83f6a340cc7545e044f0a0f88c0e38dd3fa40d"
-    arbitrage = Arbitrage(arb_address, wallet_key, 100, 100, 0.01, 5, -0.01)
+    arbitrage = MyArbitrage(arb_address, wallet_key, 100, 100, 0.01, 5, -0.01)
     while True:
         if time.time() - arbitrage.last_print_time >= 60:
             arbitrage.print_account_info()

@@ -71,33 +71,28 @@ contract UniswapV3Arbitrage is SwapSingle {
             int256 collateralBalance,
             int256 availableCash,
             int256 position,
-            int256 leverage,
+            int256 availableMargin,
             ,
             ,
 
         ) = accountInfo();
         require(position <= 0, "position > 0");
-        if (leverage != targetLeverage) {
-            ILiquidityPool(pool).setTargetLeverage(
-                perpetualIndex,
-                msg.sender,
-                targetLeverage
-            );
-        }
         int256 beforeTotalCollateral = availableCash.add(collateralBalance);
-        open(amount);
+        open(amount, availableMargin);
         bool isReceiveFunding;
+        int256 effectiveLeverage;
         (
             ,
             collateralBalance,
             availableCash,
             ,
             ,
-            ,
+            effectiveLeverage,
             ,
             isReceiveFunding
         ) = accountInfo();
         require(isReceiveFunding, "pay funding");
+        require(effectiveLeverage <= targetLeverage, "leverage too high");
         profit = availableCash.add(collateralBalance).sub(
             beforeTotalCollateral
         );
@@ -188,21 +183,19 @@ contract UniswapV3Arbitrage is SwapSingle {
         return availableCash.add(collateralBalance).sub(beforeTotalCollateral);
     }
 
-    function open(uint256 amount) internal {
+    function open(uint256 amount, int256 availableMargin) internal {
         amount = amount / 10**(18 - underlyingAssetDecimals);
         require(amount > 0, "zero amount");
         int256 mcdexAmount = SafeCast
         .toInt256(amount * 10**(18 - underlyingAssetDecimals))
         .neg();
-        ILiquidityPool(pool).trade(
-            perpetualIndex,
-            msg.sender,
-            mcdexAmount,
-            0,
-            type(uint256).max,
-            msg.sender,
-            Constant.MASK_MARKET_ORDER | Constant.MASK_USE_TARGET_LEVERAGE
-        );
+        if (availableMargin > 0) {
+            ILiquidityPool(pool).withdraw(
+                perpetualIndex,
+                msg.sender,
+                availableMargin
+            );
+        }
         ExactOutputSingleParams memory params = ExactOutputSingleParams({
             tokenIn: collateral,
             tokenOut: underlyingAsset,
@@ -225,6 +218,15 @@ contract UniswapV3Arbitrage is SwapSingle {
                 collateralBalance
             );
         }
+        ILiquidityPool(pool).trade(
+            perpetualIndex,
+            msg.sender,
+            mcdexAmount,
+            0,
+            type(uint256).max,
+            msg.sender,
+            Constant.MASK_MARKET_ORDER
+        );
     }
 
     function close(uint256 amount) internal {
@@ -272,7 +274,7 @@ contract UniswapV3Arbitrage is SwapSingle {
             int256 collateralBalance,
             int256 availableCash,
             int256 position,
-            int256 leverage,
+            int256 availableMargin,
             int256 effectiveLeverage,
             int256 fundingRate,
             bool isReceiveFunding
@@ -288,9 +290,17 @@ contract UniswapV3Arbitrage is SwapSingle {
                 10**(18 - collateralDecimals)
         );
         int256 margin;
-        (availableCash, position, , margin, , , , , leverage) = ILiquidityPool(
-            pool
-        ).getMarginAccount(perpetualIndex, msg.sender);
+        (
+            availableCash,
+            position,
+            availableMargin,
+            margin,
+            ,
+            ,
+            ,
+            ,
+
+        ) = ILiquidityPool(pool).getMarginAccount(perpetualIndex, msg.sender);
         int256[39] memory nums;
         (, , nums) = ILiquidityPool(pool).getPerpetualInfo(perpetualIndex);
         fundingRate = nums[3];
@@ -328,7 +338,17 @@ contract UniswapV3Arbitrage is SwapSingle {
             bool isReceiveFunding
         )
     {
+        leverage = targetLeverage;
         ILiquidityPool(pool).forceToSyncState();
-        return accountInfo();
+        (
+            underlyingAssetBalance,
+            collateralBalance,
+            availableCash,
+            position,
+            ,
+            effectiveLeverage,
+            fundingRate,
+            isReceiveFunding
+        ) = accountInfo();
     }
 }
