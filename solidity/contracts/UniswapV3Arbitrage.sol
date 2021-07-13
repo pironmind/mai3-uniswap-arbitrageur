@@ -5,17 +5,18 @@ pragma abicoder v2;
 import "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IERC20Metadata.sol";
 import "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 import "./SwapSingle.sol";
 import "./libraries/SafeMathExt.sol";
-import "./interfaces/IAccessControl.sol";
 import "./interfaces/ILiquidityPool.sol";
 
 contract UniswapV3Arbitrage is SwapSingle {
     using Address for address;
     using SafeMathExt for int256;
     using SignedSafeMath for int256;
+    using SafeMath for uint256;
 
     address public underlyingAsset;
     address public collateral;
@@ -61,6 +62,7 @@ contract UniswapV3Arbitrage is SwapSingle {
         );
     }
 
+    // MCDEX short & Uniswap buy
     function profitOpen(uint256 amount, int256 profitLimit)
         public
         returns (int256 profit)
@@ -99,6 +101,7 @@ contract UniswapV3Arbitrage is SwapSingle {
         require(profit >= profitLimit, "not enough profit");
     }
 
+    // MCDEX long & Uniswap sell
     function profitClose(uint256 amount, int256 profitLimit)
         public
         returns (int256 profit)
@@ -128,6 +131,7 @@ contract UniswapV3Arbitrage is SwapSingle {
         require(profit >= profitLimit, "not enough profit");
     }
 
+    // MCDEX long & Uniswap sell
     function deleverageClose(int256 maxLeverage, uint256 amount)
         public
         returns (int256)
@@ -169,6 +173,7 @@ contract UniswapV3Arbitrage is SwapSingle {
         return availableCash.add(collateralBalance).sub(beforeTotalCollateral);
     }
 
+    // MCDEX long & Uniswap sell
     function allClose(int256 minFundingRate) public returns (int256) {
         require(minFundingRate < 0, "minFundingRate >= 0");
         ILiquidityPool(pool).forceToSyncState();
@@ -195,7 +200,7 @@ contract UniswapV3Arbitrage is SwapSingle {
         amount = amount / 10**(18 - underlyingAssetDecimals);
         require(amount > 0, "zero amount");
         int256 mcdexAmount = SafeCast
-        .toInt256(amount * 10**(18 - underlyingAssetDecimals))
+        .toInt256(amount.mul(10**(18 - underlyingAssetDecimals)))
         .neg();
         if (availableMargin > 0) {
             ILiquidityPool(pool).withdraw(
@@ -216,8 +221,9 @@ contract UniswapV3Arbitrage is SwapSingle {
         });
         exactOutputSingle(params);
         int256 collateralBalance = SafeCast.toInt256(
-            IERC20Metadata(collateral).balanceOf(msg.sender) *
+            IERC20Metadata(collateral).balanceOf(msg.sender).mul(
                 10**(18 - collateralDecimals)
+            )
         );
         if (collateralBalance > 0) {
             ILiquidityPool(pool).deposit(
@@ -252,11 +258,12 @@ contract UniswapV3Arbitrage is SwapSingle {
         });
         exactInputSingle(params);
         int256 mcdexAmount = SafeCast.toInt256(
-            amount * 10**(18 - underlyingAssetDecimals)
+            amount.mul(10**(18 - underlyingAssetDecimals))
         );
         int256 collateralBalance = SafeCast.toInt256(
-            IERC20Metadata(collateral).balanceOf(msg.sender) *
+            IERC20Metadata(collateral).balanceOf(msg.sender).mul(
                 10**(18 - collateralDecimals)
+            )
         );
         ILiquidityPool(pool).deposit(
             perpetualIndex,
@@ -290,12 +297,14 @@ contract UniswapV3Arbitrage is SwapSingle {
     {
         int256 maxEffectiveLeverage = 9999 * 10**18;
         underlyingAssetBalance = SafeCast.toInt256(
-            IERC20Metadata(underlyingAsset).balanceOf(msg.sender) *
+            IERC20Metadata(underlyingAsset).balanceOf(msg.sender).mul(
                 10**(18 - underlyingAssetDecimals)
+            )
         );
         collateralBalance = SafeCast.toInt256(
-            IERC20Metadata(collateral).balanceOf(msg.sender) *
+            IERC20Metadata(collateral).balanceOf(msg.sender).mul(
                 10**(18 - collateralDecimals)
+            )
         );
         int256 margin;
         (
@@ -312,11 +321,12 @@ contract UniswapV3Arbitrage is SwapSingle {
         int256[39] memory nums;
         (, , nums) = ILiquidityPool(pool).getPerpetualInfo(perpetualIndex);
         fundingRate = nums[3];
+        // available cash = cash - position * unitAccumulativeFunding
         availableCash = availableCash.sub(position.wmul(nums[4]));
         (, int256 poolPosition, , , , , , , ) = ILiquidityPool(pool)
         .getMarginAccount(perpetualIndex, pool);
         isReceiveFunding = Utils.hasTheSameSign(position, poolPosition);
-        if (margin.sub(nums[11]) == 0) {
+        if (margin == nums[11]) {
             effectiveLeverage = position == 0 ? 0 : maxEffectiveLeverage;
         } else {
             effectiveLeverage = position.abs().wfrac(

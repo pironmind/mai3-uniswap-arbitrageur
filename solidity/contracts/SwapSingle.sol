@@ -84,9 +84,9 @@ contract SwapSingle {
         (bool isExactInput, uint256 amountToPay) = amount0Delta > 0
             ? (tokenIn < tokenOut, uint256(amount0Delta))
             : (tokenOut < tokenIn, uint256(amount1Delta));
-        address pay_token = isExactInput ? tokenIn : tokenOut;
+        address payToken = isExactInput ? tokenIn : tokenOut;
         TransferHelper.safeTransferFrom(
-            pay_token,
+            payToken,
             data.payer,
             msg.sender,
             amountToPay
@@ -128,7 +128,6 @@ contract SwapSingle {
 
     function exactInputSingle(ExactInputSingleParams memory params)
         public
-        payable
         checkDeadline(params.deadline)
         returns (uint256 amountOut)
     {
@@ -193,7 +192,6 @@ contract SwapSingle {
 
     function exactOutputSingle(ExactOutputSingleParams memory params)
         public
-        payable
         checkDeadline(params.deadline)
         returns (uint256 amountIn)
     {
