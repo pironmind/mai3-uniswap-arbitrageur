@@ -63,8 +63,8 @@ class MyArbitrage():
         except Exception as e:
             self.my_print(e)
             self.my_print(
-                f"amount:{amount / 10**18} profit:{int(self.big_number) * amount / 10**18}")
-            return float((self.big_number * Wad(amount)).value)
+                f"amount:{amount / 10**18} profit:{int(self.big_number) * (amount + 1) / 10**18}")
+            return float((self.big_number * (Wad(amount) + Wad.from_number(1))).value)
         return float(-profit)
 
     def profit_close_check(self, position):
@@ -93,14 +93,14 @@ class MyArbitrage():
         except Exception as e:
             self.my_print(e)
             self.my_print(
-                f"amount:{amount / 10**18} profit:{int(self.big_number) * amount / 10**18}")
-            return float((self.big_number * Wad(amount)).value)
+                f"amount:{amount / 10**18} profit:{int(self.big_number) * (amount + 1) / 10**18}")
+            return float((self.big_number * (Wad(amount) + Wad.from_number(1))).value)
         return float(-profit)
 
     def deleverage_close_check(self, effective_leverage, position):
         if effective_leverage >= self.max_leverage:
             best_amount, min_cost = self.find_best_answer(
-                self.deleverage_close, 0, -position.value, self.trade_amount_atol.value)
+                self.deleverage_close_cost, 0, -position.value, self.trade_amount_atol.value)
             best_amount = Wad(int(best_amount))
             max_profit = Wad(int(-min_cost))
             self.my_print(
@@ -114,7 +114,7 @@ class MyArbitrage():
             except Exception as e:
                 self.my_print(f"[deleverage close] [action] error:{e}")
 
-    def deleverage_close(self, amount):
+    def deleverage_close_cost(self, amount):
         amount = int(amount)
         try:
             profit = self.arb.deleverage_close(

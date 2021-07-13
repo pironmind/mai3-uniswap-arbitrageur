@@ -115,6 +115,10 @@ contract UniswapV3Arbitrage is SwapSingle {
 
         ) = accountInfo();
         require(position < 0, "position >= 0 when profit close");
+        require(
+            amount <= uint256(position.neg()),
+            "close amount exceed position"
+        );
         int256 beforeTotalCollateral = availableCash.add(collateralBalance);
         close(amount);
         (, collateralBalance, availableCash, , , , , ) = accountInfo();
@@ -144,6 +148,10 @@ contract UniswapV3Arbitrage is SwapSingle {
 
         ) = accountInfo();
         require(position < 0, "position >= 0 when deleverage close");
+        require(
+            amount <= uint256(position.neg()),
+            "close amount exceed position"
+        );
         require(effectiveLeverage >= maxLeverage, "no need to deleverage");
         int256 beforeTotalCollateral = availableCash.add(collateralBalance);
         close(amount);
