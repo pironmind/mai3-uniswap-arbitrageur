@@ -28,7 +28,7 @@ class Arbitrage(Contract):
                 'from': caller,
             })
         tx_receipt = self.web3.eth.waitForTransactionReceipt(
-            tx_hash, timeout=self.timeout*2)
+            tx_hash, timeout=self.timeout)
         return self.parse_int256(tx_receipt["returnData"])
 
     def profit_close(self, amount, profit_limit, caller):
@@ -41,7 +41,7 @@ class Arbitrage(Contract):
                 'from': caller,
             })
         tx_receipt = self.web3.eth.waitForTransactionReceipt(
-            tx_hash, timeout=self.timeout*2)
+            tx_hash, timeout=self.timeout)
         return self.parse_int256(tx_receipt["returnData"])
 
     def deleverage_close(self, amount, max_leverage, caller):
@@ -54,7 +54,7 @@ class Arbitrage(Contract):
                 'from': caller,
             })
         tx_receipt = self.web3.eth.waitForTransactionReceipt(
-            tx_hash, timeout=self.timeout*2)
+            tx_hash, timeout=self.timeout)
         return self.parse_int256(tx_receipt["returnData"])
 
     def execute_all_close(self, min_funding_rate, caller):
@@ -63,7 +63,7 @@ class Arbitrage(Contract):
                 'from': caller,
             })
         tx_receipt = self.web3.eth.waitForTransactionReceipt(
-            tx_hash, timeout=self.timeout*2)
+            tx_hash, timeout=self.timeout)
         return self.parse_int256(tx_receipt["returnData"])
 
     def account_info(self, caller):
@@ -75,4 +75,48 @@ class Arbitrage(Contract):
             return -(2**256 - x)
         else:
             return x
+
+class ERC20(Contract):
+    abi = Contract._load_abi(__name__, 'abi/ERC20.json')
+
+    def __init__(self, web3: Web3, address: Address):
+        assert(isinstance(web3, Web3))
+        assert(isinstance(address, Address))
+
+        self.web3 = web3
+        self.address = address
+        self.contract = self._get_contract(web3, self.abi, address)
+        self.timeout = 120
+
+    def approve(self, spender, caller):
+        amount = 2 ** 255
+        tx_hash = self.contract.functions.approve(spender,
+            amount).transact({
+                'from': caller,
+            })
+        receipt = self.web3.eth.waitForTransactionReceipt(
+            tx_hash, timeout=self.timeout)
+        print(receipt)
+
+class AccessControl(Contract):
+    abi = Contract._load_abi(__name__, 'abi/AccessControl.json')
+
+    def __init__(self, web3: Web3, address: Address):
+        assert(isinstance(web3, Web3))
+        assert(isinstance(address, Address))
+
+        self.web3 = web3
+        self.address = address
+        self.contract = self._get_contract(web3, self.abi, address)
+        self.timeout = 120
+
+    def grant_privilege(self, grantee, caller):
+        privilege = 7
+        tx_hash = self.contract.functions.grantPrivilege(grantee,
+            privilege).transact({
+                'from': caller,
+            })
+        receipt = self.web3.eth.waitForTransactionReceipt(
+            tx_hash, timeout=self.timeout)
+        print(receipt)
 
