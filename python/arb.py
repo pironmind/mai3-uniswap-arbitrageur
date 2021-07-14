@@ -57,7 +57,7 @@ class MyArbitrage():
                 profit = self.arb.execute_profit_open(
                     best_amount.value, self.profit_limit.value, self.account.address)
                 self.logger().info(
-                    f"[profit open] [action] open {best_amount} and profit {profit}")
+                    f"[profit open] [action] open {best_amount} and profit {Wad(profit)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[profit open] [action] error:{e}")
@@ -71,7 +71,7 @@ class MyArbitrage():
         except Exception as e:
             self.logger().debug(e)
             self.logger().debug(
-                f"amount:{amount / 10**18} profit:{(int(self.big_number) + amount) / 10**18}")
+                f"amount:{amount / 10**18} profit:{-(self.big_number.value + amount) / 10**18}")
             return float((self.big_number + Wad(amount)).value)
         return float(-profit)
 
@@ -87,7 +87,7 @@ class MyArbitrage():
                 profit = self.arb.execute_profit_close(
                     best_amount.value, self.profit_limit.value, self.account.address)
                 self.logger().info(
-                    f"[profit close] [action] close {best_amount} and profit {profit}")
+                    f"[profit close] [action] close {best_amount} and profit {Wad(profit)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[profit close] [action] error:{e}")
@@ -101,7 +101,7 @@ class MyArbitrage():
         except Exception as e:
             self.logger().debug(e)
             self.logger().debug(
-                f"amount:{amount / 10**18} profit:{(int(self.big_number) + amount) / 10**18}")
+                f"amount:{amount / 10**18} profit:{-(self.big_number.value + amount) / 10**18}")
             return float((self.big_number + Wad(amount)).value)
         return float(-profit)
 
@@ -117,7 +117,7 @@ class MyArbitrage():
                 profit = self.arb.execute_deleverage_close(
                     best_amount.value, self.max_leverage.value, self.account.address)
                 self.logger().info(
-                    f"[deleverage close] [action] close {best_amount} and profit {profit}")
+                    f"[deleverage close] [action] close {best_amount} and profit {Wad(profit)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[deleverage close] [action] error:{e}")
@@ -131,7 +131,7 @@ class MyArbitrage():
         except Exception as e:
             self.logger().debug(e)
             self.logger().debug(
-                f"amount:{amount / 10**18} profit:{(int(self.big_number) - amount) / 10**18}")
+                f"amount:{amount / 10**18} profit:{-(self.big_number.value - amount) / 10**18}")
             return float((self.big_number - Wad(amount)).value)
         return float(-profit)
 
@@ -141,7 +141,7 @@ class MyArbitrage():
                 profit = self.arb.execute_all_close(
                     self.min_funding_rate.value, self.account.address)
                 self.logger().info(
-                    f"[all close] [action] close {Wad(0) - position} and profit {profit}")
+                    f"[all close] [action] close {Wad(0) - position} and profit {Wad(profit)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[all close] [action] error:{e}")

@@ -132,7 +132,7 @@ contract UniswapV3Arbitrage is SwapSingle {
     }
 
     // MCDEX long & Uniswap sell
-    function deleverageClose(int256 maxLeverage, uint256 amount)
+    function deleverageClose(uint256 amount, int256 maxLeverage)
         public
         returns (int256)
     {
