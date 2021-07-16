@@ -77,8 +77,8 @@ contract SwapSingle {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
         (address tokenIn, address tokenOut, uint24 fee) = data
-        .path
-        .decodeFirstPool();
+            .path
+            .decodeFirstPool();
         CallbackValidation.verifyCallback(factory, tokenIn, tokenOut, fee);
 
         (bool isExactInput, uint256 amountToPay) = amount0Delta > 0
@@ -104,8 +104,8 @@ contract SwapSingle {
         if (recipient == address(0)) recipient = address(this);
 
         (address tokenIn, address tokenOut, uint24 fee) = data
-        .path
-        .decodeFirstPool();
+            .path
+            .decodeFirstPool();
 
         bool zeroForOne = tokenIn < tokenOut;
 
@@ -158,8 +158,8 @@ contract SwapSingle {
         if (recipient == address(0)) recipient = address(this);
 
         (address tokenOut, address tokenIn, uint24 fee) = data
-        .path
-        .decodeFirstPool();
+            .path
+            .decodeFirstPool();
 
         bool zeroForOne = tokenIn < tokenOut;
 

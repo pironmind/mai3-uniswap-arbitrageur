@@ -38,7 +38,7 @@ contract UniswapV3Arbitrage is SwapSingle {
     ) SwapSingle(factory_) {
         require(targetLeverage_ > 0, "invalid target leverage");
         (ILiquidityPool.PerpetualState state, , ) = ILiquidityPool(pool_)
-        .getPerpetualInfo(perpetualIndex_);
+            .getPerpetualInfo(perpetualIndex_);
         require(
             state == ILiquidityPool.PerpetualState.NORMAL,
             "perpetual is not NORMAL"
@@ -200,8 +200,8 @@ contract UniswapV3Arbitrage is SwapSingle {
         amount = amount / 10**(18 - underlyingAssetDecimals);
         require(amount > 0, "zero amount");
         int256 mcdexAmount = SafeCast
-        .toInt256(amount.mul(10**(18 - underlyingAssetDecimals)))
-        .neg();
+            .toInt256(amount.mul(10**(18 - underlyingAssetDecimals)))
+            .neg();
         if (availableMargin > 0) {
             ILiquidityPool(pool).withdraw(
                 perpetualIndex,
@@ -324,7 +324,7 @@ contract UniswapV3Arbitrage is SwapSingle {
         // available cash = cash - position * unitAccumulativeFunding
         availableCash = availableCash.sub(position.wmul(nums[4]));
         (, int256 poolPosition, , , , , , , ) = ILiquidityPool(pool)
-        .getMarginAccount(perpetualIndex, pool);
+            .getMarginAccount(perpetualIndex, pool);
         isReceiveFunding = Utils.hasTheSameSign(position, poolPosition);
         if (margin == nums[11]) {
             effectiveLeverage = position == 0 ? 0 : maxEffectiveLeverage;
