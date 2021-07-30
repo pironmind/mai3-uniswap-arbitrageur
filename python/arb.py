@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 from scipy import optimize
 import logging
+from logging.handlers import TimedRotatingFileHandler
 
 from lib.address import Address
 from lib.wad import Wad
@@ -43,6 +44,8 @@ class MyArbitrage():
         if logger is None:
             logger = logging.getLogger(__name__)
             logger.setLevel(logging.DEBUG)
+            handler = TimedRotatingFileHandler(log_filename, 'D')
+            logger.addHandler(handler)
         return logger
 
     def profit_open_check(self):
