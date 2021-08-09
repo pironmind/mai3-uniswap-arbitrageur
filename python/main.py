@@ -46,6 +46,9 @@ class MyArbitrage():
             logger = logging.getLogger(__name__)
             logger.setLevel(logging.DEBUG)
             handler = TimedRotatingFileHandler("main.log", 'D')
+            formatter = logging.Formatter(
+                fmt='%(levelname)s %(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+            handler.setFormatter(formatter)
             logger.addHandler(handler)
         return logger
 
@@ -179,8 +182,6 @@ class MyArbitrage():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO, format='%(levelname)s %(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     arb_address = ""
     wallet_key = ""
     arbitrage = MyArbitrage(arb_address, wallet_key, 100, 100, 0.01, 5, -0.004)
