@@ -13,6 +13,7 @@ from mai3_contract import Arbitrage
 
 logger = None
 
+
 class MyArbitrage():
 
     big_number = Wad.from_number(9999999)
@@ -44,7 +45,7 @@ class MyArbitrage():
         if logger is None:
             logger = logging.getLogger(__name__)
             logger.setLevel(logging.DEBUG)
-            handler = TimedRotatingFileHandler(log_filename, 'D')
+            handler = TimedRotatingFileHandler("main.log", 'D')
             logger.addHandler(handler)
         return logger
 
@@ -70,7 +71,8 @@ class MyArbitrage():
         try:
             profit = self.arb.profit_open(
                 amount, (Wad(0) - self.big_number).value, self.account.address)
-            self.logger().debug(f"amount:{amount / 10**18} profit:{profit / 10**18}")
+            self.logger().debug(
+                f"amount:{amount / 10**18} profit:{profit / 10**18}")
         except Exception as e:
             self.logger().debug(e)
             self.logger().debug(
@@ -100,7 +102,8 @@ class MyArbitrage():
         try:
             profit = self.arb.profit_close(
                 amount, (Wad(0)-self.big_number).value, self.account.address)
-            self.logger().debug(f"amount:{amount / 10**18} profit:{profit / 10**18}")
+            self.logger().debug(
+                f"amount:{amount / 10**18} profit:{profit / 10**18}")
         except Exception as e:
             self.logger().debug(e)
             self.logger().debug(
@@ -130,7 +133,8 @@ class MyArbitrage():
         try:
             profit = self.arb.deleverage_close(
                 amount, self.max_leverage.value, self.account.address)
-            self.logger().debug(f"amount:{amount / 10**18} profit:{profit / 10**18}")
+            self.logger().debug(
+                f"amount:{amount / 10**18} profit:{profit / 10**18}")
         except Exception as e:
             self.logger().debug(e)
             self.logger().debug(
@@ -175,10 +179,11 @@ class MyArbitrage():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(levelname)s %(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    arb_address = "0xEb91772706F9ac9C89F223937A89D3308016dAF1"
+    logging.basicConfig(
+        level=logging.INFO, format='%(levelname)s %(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    arb_address = ""
     wallet_key = ""
-    arbitrage = MyArbitrage(arb_address, wallet_key, 100, 100, 0.01, 5, -0.01)
+    arbitrage = MyArbitrage(arb_address, wallet_key, 100, 100, 0.01, 5, -0.004)
     while True:
         if time.time() - arbitrage.last_print_time >= 60:
             arbitrage.print_account_info()
