@@ -11,7 +11,8 @@ from lib.address import Address
 from lib.wad import Wad
 from mai3_contract import Arbitrage
 
-logger = None
+_logger = None
+_debug_logger = None
 
 
 class MyArbitrage():
@@ -41,16 +42,29 @@ class MyArbitrage():
 
     @classmethod
     def logger(cls):
-        global logger
-        if logger is None:
-            logger = logging.getLogger(__name__)
-            logger.setLevel(logging.DEBUG)
+        global _logger
+        if _logger is None:
+            _logger = logging.getLogger(__name__)
+            _logger.setLevel(logging.INFO)
             handler = TimedRotatingFileHandler("main.log", 'D')
             formatter = logging.Formatter(
                 fmt='%(levelname)s %(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
             handler.setFormatter(formatter)
-            logger.addHandler(handler)
-        return logger
+            _logger.addHandler(handler)
+        return _logger
+
+    @classmethod
+    def debug_logger(cls):
+        global _debug_logger
+        if _debug_logger is None:
+            _debug_logger = logging.getLogger(__name__ + 'debug')
+            _debug_logger.setLevel(logging.DEBUG)
+            handler = TimedRotatingFileHandler("debug.log", 'D')
+            formatter = logging.Formatter(
+                fmt='%(levelname)s %(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+            handler.setFormatter(formatter)
+            _debug_logger.addHandler(handler)
+        return _debug_logger
 
     def profit_open_check(self):
         best_amount, min_cost = self.find_best_answer(
@@ -58,13 +72,13 @@ class MyArbitrage():
         best_amount = Wad(int(best_amount))
         max_profit = Wad(int(-min_cost))
         self.logger().info(
-            f"[profit open] best amount:{best_amount}, max profit:{max_profit}")
+            f"[profit open] best amount:{round(float(best_amount), 4)}, max profit:{round(float(max_profit), 4)}")
         if max_profit >= self.profit_limit:
             try:
                 profit = self.arb.execute_profit_open(
                     best_amount.value, self.profit_limit.value, self.account.address)
                 self.logger().info(
-                    f"[profit open] [action] open {best_amount} and profit {Wad(profit)}")
+                    f"[profit open] [action] open {round(float(best_amount), 4)} and profit {round(float(Wad(profit)), 4)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[profit open] [action] error:{e}")
@@ -74,28 +88,34 @@ class MyArbitrage():
         try:
             profit = self.arb.profit_open(
                 amount, (Wad(0) - self.big_number).value, self.account.address)
-            self.logger().debug(
-                f"amount:{amount / 10**18} profit:{profit / 10**18}")
+            self.debug_logger().debug(
+                f"[profit open] amount:{round(amount / 10**18, 4)} profit:{round(profit / 10**18, 4)}")
         except Exception as e:
-            self.logger().debug(e)
-            self.logger().debug(
-                f"amount:{amount / 10**18} profit:{-(self.big_number.value + amount) / 10**18}")
+            self.debug_logger().debug(f"[profit open] {e}")
+            self.debug_logger().debug(
+                f"[profit open] amount:{round(amount / 10**18, 4)} profit:{round(-(self.big_number.value + amount) / 10**18, 4)}")
             return float((self.big_number + Wad(amount)).value)
         return float(-profit)
 
-    def profit_close_check(self, position):
+    def profit_close_check(self, position, funding_rate):
         best_amount, min_cost = self.find_best_answer(
             self.profit_close_cost, 0, -position.value, self.trade_amount_atol.value)
         best_amount = Wad(int(best_amount))
         max_profit = Wad(int(-min_cost))
         self.logger().info(
-            f"[profit close] best amount:{best_amount}, max profit:{max_profit}")
-        if max_profit >= self.profit_limit:
+            f"[profit close] best amount:{round(float(best_amount), 4)}, max profit:{round(float(max_profit), 4)}")
+        if funding_rate <= Wad(0):
+            # paying funding
+            close_profit_limit = Wad.from_number(1)
+        else:
+            # receiving funding
+            close_profit_limit = self.profit_limit
+        if max_profit >= close_profit_limit:
             try:
                 profit = self.arb.execute_profit_close(
-                    best_amount.value, self.profit_limit.value, self.account.address)
+                    best_amount.value, close_profit_limit.value, self.account.address)
                 self.logger().info(
-                    f"[profit close] [action] close {best_amount} and profit {Wad(profit)}")
+                    f"[profit close] [action] close {round(float(best_amount), 4)} and profit {round(float(Wad(profit)), 4)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[profit close] [action] error:{e}")
@@ -105,12 +125,12 @@ class MyArbitrage():
         try:
             profit = self.arb.profit_close(
                 amount, (Wad(0)-self.big_number).value, self.account.address)
-            self.logger().debug(
-                f"amount:{amount / 10**18} profit:{profit / 10**18}")
+            self.debug_logger().debug(
+                f"[profit close] amount:{round(amount / 10**18, 4)} profit:{round(profit / 10**18, 4)}")
         except Exception as e:
-            self.logger().debug(e)
-            self.logger().debug(
-                f"amount:{amount / 10**18} profit:{-(self.big_number.value + amount) / 10**18}")
+            self.debug_logger().debug(f"[profit close] {e}")
+            self.debug_logger().debug(
+                f"[profit close] amount:{round(amount / 10**18, 4)} profit:{round(-(self.big_number.value + amount) / 10**18, 4)}")
             return float((self.big_number + Wad(amount)).value)
         return float(-profit)
 
@@ -121,27 +141,30 @@ class MyArbitrage():
             best_amount = Wad(int(best_amount))
             max_profit = Wad(int(-min_cost))
             self.logger().info(
-                f"[deleverage close] best amount:{best_amount} max profit:{max_profit}")
+                f"[deleverage close] best amount:{round(float(best_amount), 4)} max profit:{round(float(max_profit), 4)}")
             try:
                 profit = self.arb.execute_deleverage_close(
                     best_amount.value, self.max_leverage.value, self.account.address)
                 self.logger().info(
-                    f"[deleverage close] [action] close {best_amount} and profit {Wad(profit)}")
+                    f"[deleverage close] [action] close {round(float(best_amount), 4)} and profit {round(float(Wad(profit)), 4)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[deleverage close] [action] error:{e}")
+        else:
+            self.logger().info(
+                f"[deleverage close] no need to deleverage, effective lev:{round(float(effective_leverage), 4)} max lev:{round(float(self.max_leverage), 4)}")
 
     def deleverage_close_cost(self, amount):
         amount = int(amount)
         try:
             profit = self.arb.deleverage_close(
                 amount, self.max_leverage.value, self.account.address)
-            self.logger().debug(
-                f"amount:{amount / 10**18} profit:{profit / 10**18}")
+            self.debug_logger().debug(
+                f"[deleverage close] amount:{round(amount / 10**18, 4)} profit:{round(profit / 10**18, 4)}")
         except Exception as e:
-            self.logger().debug(e)
-            self.logger().debug(
-                f"amount:{amount / 10**18} profit:{-(self.big_number.value - amount) / 10**18}")
+            self.debug_logger().debug(f"[deleverage close] {e}")
+            self.debug_logger().debug(
+                f"[deleverage close] amount:{round(amount / 10**18, 4)} profit:{round(-(self.big_number.value - amount) / 10**18, 4)}")
             return float((self.big_number - Wad(amount)).value)
         return float(-profit)
 
@@ -151,10 +174,13 @@ class MyArbitrage():
                 profit = self.arb.execute_all_close(
                     self.min_funding_rate.value, self.account.address)
                 self.logger().info(
-                    f"[all close] [action] close {Wad(0) - position} and profit {Wad(profit)}")
+                    f"[all close] [action] close {round(float(Wad(0) - position), 4)} and profit {round(float(Wad(profit)), 4)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[all close] [action] error:{e}")
+        else:
+            self.logger().info(
+                f"[all close] no need to close all, fr:{round(float(funding_rate) * 100, 4)}% min fr:{round(float(self.min_funding_rate) * 100, 4)}%")
 
     def read_account(self):
         underlying_asset_balance, collateral_balance, available_cash, position, leverage, effective_leverage, funding_rate, is_receive_funding = self.arb.account_info(
@@ -170,13 +196,13 @@ class MyArbitrage():
         try:
             underlying_asset_balance, collateral_balance, available_cash, position, leverage, effective_leverage, funding_rate, is_receive_funding = self.read_account()
             self.logger().info(
-                f"[read account] position: {underlying_asset_balance} vs {position}")
+                f"[read account] position: {round(float(underlying_asset_balance), 4)} vs {round(float(position), 4)}")
             self.logger().info(
-                f"[read account] collateral: {collateral_balance} vs {available_cash}, total:{collateral_balance + available_cash}")
+                f"[read account] collateral: {round(float(collateral_balance), 4)} vs {round(float(available_cash), 4)}, total:{round(float(collateral_balance + available_cash), 4)}")
             self.logger().info(
-                f"[read account] leverage set:{leverage}, now:{effective_leverage}")
+                f"[read account] leverage set:{round(float(leverage), 4)}, now:{round(float(effective_leverage), 4)}")
             self.logger().info(
-                f"[read account] {'receiving funding' if is_receive_funding else 'paying funding'}, funding rate:{funding_rate}")
+                f"[read account] {'receiving funding' if is_receive_funding else 'paying funding'}, funding rate:{round(float(funding_rate) * 100, 4)}%")
         except Exception as e:
             self.logger().error(f"[read account] error:{e}")
 
@@ -184,9 +210,9 @@ class MyArbitrage():
 if __name__ == "__main__":
     arb_address = ""
     wallet_key = ""
-    arbitrage = MyArbitrage(arb_address, wallet_key, 100, 100, 0.01, 5, -0.004)
+    arbitrage = MyArbitrage(arb_address, wallet_key, 50, 100, 0.01, 5, -0.004)
     while True:
-        if time.time() - arbitrage.last_print_time >= 60:
+        if time.time() - arbitrage.last_print_time >= 60 * 5:
             arbitrage.print_account_info()
             arbitrage.last_print_time = time.time()
         arbitrage.profit_open_check()
@@ -197,6 +223,6 @@ if __name__ == "__main__":
             continue
         position = Wad(position)
         if not position.is_zero():
-            arbitrage.profit_close_check(position)
+            arbitrage.profit_close_check(position, funding_rate)
             arbitrage.deleverage_close_check(effective_leverage, position)
             arbitrage.all_close_check(funding_rate, position)
