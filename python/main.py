@@ -9,7 +9,7 @@ from logging.handlers import TimedRotatingFileHandler
 
 from lib.address import Address
 from lib.wad import Wad
-from mai3_contract import Arbitrage
+from contract import Arbitrage
 
 _logger = None
 _debug_logger = None

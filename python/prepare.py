@@ -3,7 +3,7 @@ from eth_account import Account
 from web3.middleware import construct_sign_and_send_raw_middleware
 
 
-from mai3_contract import ERC20, AccessControl
+from contract import ERC20, AccessControl
 from lib.address import Address
 
 
