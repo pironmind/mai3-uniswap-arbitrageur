@@ -45,7 +45,7 @@ class MyArbitrage():
         if _logger is None:
             _logger = logging.getLogger(__name__)
             _logger.setLevel(logging.INFO)
-            handler = TimedRotatingFileHandler("main.log", 'D')
+            handler = TimedRotatingFileHandler("logs/main.log", 'D')
             formatter = logging.Formatter(
                 fmt='%(levelname)s %(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
             handler.setFormatter(formatter)
@@ -58,7 +58,7 @@ class MyArbitrage():
         if _debug_logger is None:
             _debug_logger = logging.getLogger(__name__ + 'debug')
             _debug_logger.setLevel(logging.DEBUG)
-            handler = TimedRotatingFileHandler("debug.log", 'D')
+            handler = TimedRotatingFileHandler("logs/debug.log", 'D')
             formatter = logging.Formatter(
                 fmt='%(levelname)s %(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
             handler.setFormatter(formatter)
