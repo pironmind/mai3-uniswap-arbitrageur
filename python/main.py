@@ -2,7 +2,6 @@ from web3 import Web3, HTTPProvider
 from eth_account import Account
 from web3.middleware import construct_sign_and_send_raw_middleware
 import time
-from datetime import datetime
 from scipy import optimize
 import logging
 from logging.handlers import TimedRotatingFileHandler
