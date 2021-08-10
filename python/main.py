@@ -75,10 +75,14 @@ class MyArbitrage():
             f"[profit open] best amount:{round(float(best_amount), 4)}, max profit:{round(float(max_profit), 4)}")
         if max_profit >= self.profit_limit:
             try:
-                profit = self.arb.execute_profit_open(
+                status, profit = self.arb.execute_profit_open(
                     best_amount.value, self.profit_limit.value, self.account.address)
-                self.logger().info(
-                    f"[profit open] [action] open {round(float(best_amount), 4)} and profit {round(float(Wad(profit)), 4)}")
+                if status == 1:
+                    self.logger().info(
+                        f"[profit open] [action] success open {round(float(best_amount), 4)} and profit {round(float(Wad(profit)), 4)}")
+                else:
+                    self.logger().info(
+                        f"[profit open] [action] fail open {round(float(best_amount), 4)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[profit open] [action] error:{e}")
@@ -112,10 +116,14 @@ class MyArbitrage():
             close_profit_limit = self.profit_limit
         if max_profit >= close_profit_limit:
             try:
-                profit = self.arb.execute_profit_close(
+                status, profit = self.arb.execute_profit_close(
                     best_amount.value, close_profit_limit.value, self.account.address)
-                self.logger().info(
-                    f"[profit close] [action] close {round(float(best_amount), 4)} and profit {round(float(Wad(profit)), 4)}")
+                if status == 1:
+                    self.logger().info(
+                        f"[profit close] [action] success close {round(float(best_amount), 4)} and profit {round(float(Wad(profit)), 4)}")
+                else:
+                    self.logger().info(
+                        f"[profit close] [action] fail close {round(float(best_amount), 4)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[profit close] [action] error:{e}")
@@ -143,10 +151,14 @@ class MyArbitrage():
             self.logger().info(
                 f"[deleverage close] best amount:{round(float(best_amount), 4)} max profit:{round(float(max_profit), 4)}")
             try:
-                profit = self.arb.execute_deleverage_close(
+                status, profit = self.arb.execute_deleverage_close(
                     best_amount.value, self.max_leverage.value, self.account.address)
-                self.logger().info(
-                    f"[deleverage close] [action] close {round(float(best_amount), 4)} and profit {round(float(Wad(profit)), 4)}")
+                if status == 1:
+                    self.logger().info(
+                        f"[deleverage close] [action] success close {round(float(best_amount), 4)} and profit {round(float(Wad(profit)), 4)}")
+                else:
+                    self.logger().info(
+                        f"[deleverage close] [action] fail close {round(float(best_amount), 4)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[deleverage close] [action] error:{e}")
@@ -171,10 +183,14 @@ class MyArbitrage():
     def all_close_check(self, funding_rate, position):
         if funding_rate <= self.min_funding_rate:
             try:
-                profit = self.arb.execute_all_close(
+                status, profit = self.arb.execute_all_close(
                     self.min_funding_rate.value, self.account.address)
-                self.logger().info(
-                    f"[all close] [action] close {round(float(Wad(0) - position), 4)} and profit {round(float(Wad(profit)), 4)}")
+                if status == 1:
+                    self.logger().info(
+                        f"[all close] [action] success close {round(float(Wad(0) - position), 4)} and profit {round(float(Wad(profit)), 4)}")
+                else:
+                    self.logger().info(
+                        f"[all close] [action] fail close {round(float(Wad(0) - position), 4)}")
                 self.print_account_info()
             except Exception as e:
                 self.logger().error(f"[all close] [action] error:{e}")
