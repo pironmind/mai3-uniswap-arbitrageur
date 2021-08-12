@@ -57,11 +57,10 @@ class Arbitrage(Contract):
             tx_hash, timeout=self.timeout)
         return tx_receipt["status"], self.parse_int256(tx_receipt["returnData"])
 
-    def execute_all_close(self, min_funding_rate, caller):
-        tx_hash = self.contract.functions.allClose(
-            min_funding_rate).transact({
-                'from': caller,
-            })
+    def execute_all_close(self, caller):
+        tx_hash = self.contract.functions.allClose().transact({
+            'from': caller,
+        })
         tx_receipt = self.web3.eth.waitForTransactionReceipt(
             tx_hash, timeout=self.timeout)
         return tx_receipt["status"], self.parse_int256(tx_receipt["returnData"])

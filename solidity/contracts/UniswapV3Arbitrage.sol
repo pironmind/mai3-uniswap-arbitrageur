@@ -174,8 +174,7 @@ contract UniswapV3Arbitrage is SwapSingle {
     }
 
     // MCDEX long & Uniswap sell
-    function allClose(int256 minFundingRate) public returns (int256) {
-        require(minFundingRate < 0, "minFundingRate >= 0");
+    function allClose() public returns (int256) {
         ILiquidityPool(pool).forceToSyncState();
         (
             ,
@@ -184,11 +183,10 @@ contract UniswapV3Arbitrage is SwapSingle {
             int256 position,
             ,
             ,
-            int256 fundingRate,
+            ,
 
         ) = accountInfo();
         require(position < 0, "position >= 0 when close all");
-        require(fundingRate <= minFundingRate, "no need to close position");
         int256 beforeTotalCollateral = availableCash.add(collateralBalance);
         // close all
         close(uint256(position.neg()));

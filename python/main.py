@@ -183,7 +183,7 @@ class MyArbitrage():
         if funding_rate <= self.min_funding_rate:
             try:
                 status, profit = self.arb.execute_all_close(
-                    self.min_funding_rate.value, self.account.address)
+                    self.account.address)
                 if status == 1:
                     self.logger().info(
                         f"[all close] [action] success close {round(float(Wad(0) - position), 4)} and profit {round(float(Wad(profit)), 4)}")
